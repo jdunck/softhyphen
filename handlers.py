@@ -10,6 +10,9 @@ class BaseHandler(webapp.RequestHandler):
             'languages': LANGUAGES
         })
         return template.render(template_name, values)
+    def hyphenate(self, content, lang):
+        return hyphenate_html.hyphenate_html(content, lang,
+                                               get_hyphenator(lang))
 
 class HtmlHyphenator(BaseHandler):
     def get(self):
@@ -21,14 +24,20 @@ class HtmlHyphenator(BaseHandler):
     def post(self):
         content = self.request.get('content')
         lang = self.request.get('lang', 'en-us')
-        output = hyphenate_html.hyphenate_html(content, lang,
-                                               get_hyphenator(lang))
-
+        output = self.hyphenate(content, lang)
         self.response.out.write(self.render_template('base.html', {
             'content': content,
             'lang': lang,
             'output': output
         }))
+
+class APIHyphenator(BaseHandler):
+    def get(self):
+        pass #return list of supported langs
+    def post(self):
+        content = self.request.get('content')
+        lang = self.request.get('lang', 'en-us')
+        self.response.out.write(self.hyphenate(content, lang))
 
 LANGUAGES = [
     ('cs-cz', 'Czech'),
